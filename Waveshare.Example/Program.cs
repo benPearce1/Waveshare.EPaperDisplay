@@ -54,7 +54,7 @@ namespace Waveshare.Example
         {
             Console.Write("Initializing E-Paper Display...");
             var time = Stopwatch.StartNew();
-            using var ePaperDisplay = EPaperDisplay.Create(EPaperDisplayType.WaveShare5In65f);
+            using var ePaperDisplay = EPaperDisplay.Create(EPaperDisplayType.WaveShare7In5_V2);
             time.Stop();
             Console.WriteLine($" [Done {time.ElapsedMilliseconds} ms]");
 
