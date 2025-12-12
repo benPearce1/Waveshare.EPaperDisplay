@@ -41,50 +41,40 @@ namespace Waveshare.Example
     /// </summary>
     internal class Program
     {
-
-        //########################################################################################
-
-        #region Public Methods
-
         /// <summary>
         /// Application Main
         /// </summary>
         /// <param name="args">Commandline arguments</param>
         public static void Main(string[] args)
         {
-            Console.Write("Initializing E-Paper Display...");
-            var time = Stopwatch.StartNew();
+            var timer = new Timer("Initializing E-Paper Display...");
+            
             using var ePaperDisplay = EPaperDisplay.Create(EPaperDisplayType.WaveShare7In5_V2);
-            time.Stop();
-            Console.WriteLine($" [Done {time.ElapsedMilliseconds} ms]");
-
+            if (ePaperDisplay == null)
+            {
+                return;
+            }
+            timer.Dispose();
+            
             using var bitmap = LoadBitmap(args, ePaperDisplay.Width, ePaperDisplay.Height);
             if (bitmap == null)
             {
                 return;
             }
 
-            Console.Write("Waiting for E-Paper Display...");
-            time = Stopwatch.StartNew();
-            ePaperDisplay.Clear();
-            ePaperDisplay.WaitUntilReady();
-            time.Stop();
-            Console.WriteLine($" [Done {time.ElapsedMilliseconds} ms]");
+            using (new Timer("Waiting for E-Paper Display..."))
+            {
+                ePaperDisplay.Clear();
+                ePaperDisplay.WaitUntilReady();
+            }
 
-            Console.Write("Sending Image to E-Paper Display...");
-            time = Stopwatch.StartNew();
-            ePaperDisplay.DisplayImage(bitmap, true);
-            time.Stop();
-            Console.WriteLine($" [Done {time.ElapsedMilliseconds} ms]");
+            using (new Timer("Sending Image to E-Paper Display..."))
+            {
+                ePaperDisplay.DisplayImage(bitmap, true);
+            }
 
             Console.WriteLine("Done");
         }
-
-        #endregion Public Methods
-
-        //########################################################################################
-
-        #region Private Methods
 
         /// <summary>
         /// Load Bitmap from arguments or get the default bitmap
@@ -99,7 +89,7 @@ namespace Waveshare.Example
 
             if (args == null || args.Length == 0)
             {
-                var fileName = $"like_a_sir_{width}x{height}.bmp";
+                var fileName = $"like_a_sir_{width}x{height}-mono.bmp";
                 bitmapFilePath = Path.Combine(ExecutingAssemblyPath, fileName);
             }
             else
@@ -113,6 +103,8 @@ namespace Waveshare.Example
                 return null;
             }
 
+            Console.WriteLine($"Loading Bitmap from '{bitmapFilePath}'...");
+            
             return LoadSKBitmapFromFile(bitmapFilePath);
         }
 
@@ -124,10 +116,8 @@ namespace Waveshare.Example
         private static SkiaSharp.SKBitmap LoadSKBitmapFromFile(string filePath)
         {
             SkiaSharp.SKBitmap bitmap;
-            using (var stream = File.OpenRead(filePath))
-            {
-                bitmap = SkiaSharp.SKBitmap.Decode(stream);
-            }
+            using var stream = File.OpenRead(filePath);
+            bitmap = SkiaSharp.SKBitmap.Decode(stream);
 
             return bitmap;
         }
@@ -143,10 +133,22 @@ namespace Waveshare.Example
                 return Path.GetDirectoryName(path);
             }
         }
-
-        #endregion Private Methods
-
-        //########################################################################################
-
+    }
+    
+    
+    public class Timer : IDisposable
+    {
+        private Stopwatch sw;
+        public Timer(string message)
+        {
+            Console.Write(message);
+            sw = Stopwatch.StartNew();
+            
+        }
+        public void Dispose()
+        {
+            sw.Stop();
+            Console.WriteLine($" [Done {sw.ElapsedMilliseconds} ms]");
+        }
     }
 }
