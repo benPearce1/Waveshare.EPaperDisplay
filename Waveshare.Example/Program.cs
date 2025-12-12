@@ -119,6 +119,13 @@ namespace Waveshare.Example
             using var stream = File.OpenRead(filePath);
             bitmap = SkiaSharp.SKBitmap.Decode(stream);
 
+            if (bitmap == null)
+            {
+                throw new Exception($"Can not load Bitmap from '{filePath}'!");
+            }
+            
+            Console.WriteLine($"Bitmap loaded: {bitmap.Width}x{bitmap.Height}");
+            
             return bitmap;
         }
 
